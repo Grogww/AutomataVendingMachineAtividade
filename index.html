@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vending Machine — AFD</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div>
+    <h1>Vending Machine <span class="tag">AFD</span></h1>
+    <p class="sub">Autômato Finito Determinístico &middot; Linguagens Formais e Autômatos</p>
+  </div>
+  <button id="themeToggle" class="btn btn--ghost" type="button" title="Alternar tema">Tema</button>
+</header>
+
+<main>
+
+  <!-- ============ DIAGRAMA ============ -->
+  <section class="card">
+    <div class="card__head">
+      <h2>Diagrama de estados</h2>
+      <div class="filters">
+        <span class="filters__label">Mostrar:</span>
+        <label class="chip chip--a"><input type="checkbox" data-filter="a" checked> a &middot; 5¢</label>
+        <label class="chip chip--b"><input type="checkbox" data-filter="b" checked> b &middot; 10¢</label>
+        <label class="chip chip--c"><input type="checkbox" data-filter="c" checked> c &middot; 25¢</label>
+      </div>
+    </div>
+    <div class="diagram-scroll">
+      <svg id="diagram" viewBox="0 0 1120 340" role="img"
+           aria-label="Diagrama de estados do autômato da vending machine"></svg>
+    </div>
+    <p class="hint">Cada estado é o <strong>saldo acumulado</strong>. Os arcos são as moedas inseridas.
+       Estado duplo = final (produto entregue).</p>
+  </section>
+
+  <div class="columns">
+
+    <!-- ============ ENTRADA ============ -->
+    <section class="card">
+      <div class="card__head"><h2>Entrada</h2></div>
+
+      <p class="label">Inserir moeda</p>
+      <div class="coins">
+        <button class="coin coin--a" data-coin="a" type="button">
+          <span class="coin__val">5¢</span><span class="coin__sym">a</span>
+        </button>
+        <button class="coin coin--b" data-coin="b" type="button">
+          <span class="coin__val">10¢</span><span class="coin__sym">b</span>
+        </button>
+        <button class="coin coin--c" data-coin="c" type="button">
+          <span class="coin__val">25¢</span><span class="coin__sym">c</span>
+        </button>
+      </div>
+
+      <p class="label">Palavra (Σ = {a, b, c})</p>
+      <div class="wordrow">
+        <input id="wordInput" class="wordinput" type="text" spellcheck="false"
+               autocomplete="off" placeholder="ex.: abc">
+        <button id="btnBack" class="btn btn--ghost" type="button" title="Apagar última moeda">⌫</button>
+        <button id="btnClear" class="btn btn--ghost" type="button" title="Limpar">Limpar</button>
+      </div>
+
+      <p class="label">Simulação</p>
+      <div class="controls">
+        <button id="btnFirst" class="btn" type="button" title="Voltar ao início">⏮</button>
+        <button id="btnPrev"  class="btn" type="button" title="Passo anterior">◀</button>
+        <button id="btnPlay"  class="btn btn--primary" type="button" title="Executar passo a passo">▶ Auto</button>
+        <button id="btnNext"  class="btn" type="button" title="Próximo passo">▶</button>
+        <button id="btnLast"  class="btn" type="button" title="Executar tudo">⏭</button>
+      </div>
+
+      <p class="label">Casos de teste</p>
+      <div class="cases">
+        <span class="cases__group">Aceitas</span>
+        <div class="cases__row" id="casesOk"></div>
+        <span class="cases__group">Rejeitadas</span>
+        <div class="cases__row" id="casesFail"></div>
+      </div>
+
+      <p class="hint">Atalhos: <kbd>a</kbd> <kbd>b</kbd> <kbd>c</kbd> inserem moeda &middot;
+        <kbd>←</kbd> <kbd>→</kbd> navegam &middot; <kbd>Enter</kbd> executa &middot; <kbd>Esc</kbd> limpa.</p>
+    </section>
+
+    <!-- ============ EXECUÇÃO ============ -->
+    <section class="card">
+      <div class="card__head"><h2>Execução</h2></div>
+
+      <p class="label">Fita de entrada</p>
+      <div id="tape" class="tape"></div>
+
+      <div class="stats">
+        <div class="stat">
+          <span class="stat__k">Estado atual</span>
+          <span class="stat__v" id="statState">q0</span>
+        </div>
+        <div class="stat">
+          <span class="stat__k">Saldo</span>
+          <span class="stat__v" id="statBalance">0¢</span>
+        </div>
+        <div class="stat">
+          <span class="stat__k">Passo</span>
+          <span class="stat__v" id="statStep">0 / 0</span>
+        </div>
+      </div>
+
+      <div class="meter" title="Saldo acumulado (máximo alcançável: 50¢)">
+        <div class="meter__fill" id="meterPaid"></div>
+        <div class="meter__over" id="meterOver"></div>
+        <div class="meter__mark"><span>30¢</span></div>
+      </div>
+
+      <div id="verdict" class="verdict"></div>
+    </section>
+
+  </div>
+
+  <!-- ============ TABELA δ ============ -->
+  <section class="card">
+    <div class="card__head"><h2>Tabela de transições (δ)</h2></div>
+    <div class="table-scroll">
+      <table class="delta" id="deltaTable"></table>
+    </div>
+    <p class="hint">18 transições: cada um dos seis estados não-finais tem exatamente uma transição
+      por símbolo. Estados finais não têm transição de saída &mdash; δ é <strong>parcial</strong>.</p>
+  </section>
+
+  <!-- ============ DEFINIÇÃO FORMAL ============ -->
+  <section class="card">
+    <div class="card__head"><h2>Definição formal</h2></div>
+    <div class="formal">
+      <p><code>M = (Q, Σ, δ, q₀, F)</code></p>
+      <dl>
+        <dt>Q</dt>  <dd id="fQ"></dd>
+        <dt>Σ</dt>  <dd>{ a, b, c } &nbsp;&mdash;&nbsp; a = 5¢, b = 10¢, c = 25¢</dd>
+        <dt>q₀</dt> <dd>q0</dd>
+        <dt>F</dt>  <dd id="fF"></dd>
+        <dt>δ</dt>  <dd>ver tabela acima</dd>
+      </dl>
+      <p class="hint">O troco é função do estado de aceitação alcançado, e não precisa aparecer no
+        autômato. Formalizar essa saída exigiria uma <strong>Máquina de Mealy</strong>; o enunciado
+        pede apenas o <em>reconhecimento</em> das sequências válidas.</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <a href="automatoVendingMachine.jff" download>automatoVendingMachine.jff</a>
+    <span>&middot;</span>
+    <a href="README.md">README.md</a>
+  </footer>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
